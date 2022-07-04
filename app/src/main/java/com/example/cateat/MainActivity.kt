@@ -4,47 +4,32 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.cateat.database.UserDbHelper
+import com.example.cateat.databinding.ActivityMainBinding
 import com.example.cateat.exceptions.CatException
 import com.example.cateat.service.authentication.LoginRepository
 import com.example.cateat.service.common.Result
 import com.example.cateat.service.indication.IndicationRepository
 import com.example.cateat.ui.login.LoginActivity
 import com.example.cateat.utils.CatUtils
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
+@OptIn(DelicateCoroutinesApi::class)
 class MainActivity : AppCompatActivity() {
-    /**
-     * Слой работы с показателями.
-     */
+
     private lateinit var indicationRepository: IndicationRepository
-
-    /**
-     * Слой работы с текущим пользователем.
-     */
     private lateinit var loginRepository: LoginRepository
-
-    /**
-     * Слой работы с локальной базой данных.
-     */
     private lateinit var localDbConnection: UserDbHelper
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        init()
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnRefreshDateTime.setOnClickListener {
-            val dateTime = CatUtils.getCurrentFormattedDateTime()
-            editTextDate.setText(dateTime.first)
-            editTextTime.setText(dateTime.second)
-        }
-
-        btnSave.setOnClickListener {
-            sendData()
-        }
+        initActivity()
 
         openLoginActivityIfNeed()
     }
@@ -57,24 +42,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun init() {
+    private fun initActivity() {
         indicationRepository = IndicationRepository(this)
         loginRepository = LoginRepository()
         localDbConnection = UserDbHelper(this)
+
+        binding.btnRefreshDateTime.setOnClickListener {
+            val dateTime = CatUtils.getCurrentFormattedDateTime()
+            binding.editTextDate.setText(dateTime.first)
+            binding.editTextTime.setText(dateTime.second)
+        }
+
+        binding.btnSave.setOnClickListener {
+            sendData()
+        }
     }
 
     private fun getEditValue() : Int {
-        return txtNumberEatValue.text.toString().trim().toInt()
+        return binding.txtNumberEatValue.text.toString().trim().toInt()
     }
 
     private fun getEditInstant() : String {
-        return CatUtils.getFormattedInstant(editTextDate.text.toString(), editTextTime.text.toString())
+        return CatUtils.getFormattedInstant(binding.editTextDate.text.toString(), binding.editTextTime.text.toString())
     }
 
     private fun clearEditValues() {
-        editTextDate.setText("")
-        editTextTime.setText("")
-        txtNumberEatValue.setText("")
+        binding.editTextDate.setText("")
+        binding.editTextTime.setText("")
+        binding.txtNumberEatValue.setText("")
     }
 
     private fun sendData() {
@@ -84,15 +79,13 @@ class MainActivity : AppCompatActivity() {
 
             val existingUser = localDbConnection.readUserInfo() ?: throw CatException("current user is null")
             val url = getString(R.string.cat_service_login_url)
-            runBlocking {
-                launch {
-                    val loggedInUser = loginRepository.login(url, existingUser.login, existingUser.password)
-                    val token = if (loggedInUser is Result.Success) { loggedInUser.data.token } else ""
-                    indicationRepository.transferLocalDataToServer(token)
-                    indicationRepository.saveData(token, dateTime, value)
-                }
-                clearEditValues()
+            GlobalScope.launch {
+                val loggedInUser = loginRepository.login(url, existingUser.login, existingUser.password)
+                val token = if (loggedInUser is Result.Success) { loggedInUser.data.token } else ""
+                indicationRepository.transferLocalDataToServer(token)
+                indicationRepository.saveData(token, dateTime, value)
             }
+            clearEditValues()
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
