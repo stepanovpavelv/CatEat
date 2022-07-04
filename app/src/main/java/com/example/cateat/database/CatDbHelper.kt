@@ -6,12 +6,12 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.core.content.contentValuesOf
-import com.example.cateat.CatSavedInfoDto
+import com.example.cateat.service.indication.CatSavedInfoDto
 
 /**
- * Работа с локальной БД.
+ * Работа с локальной БД - таблица "Показатели".
  */
-class CatDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, 1) {
+class CatDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, 2) {
 
     override fun onCreate(db: SQLiteDatabase?) {
         db?.execSQL(CREATE_TABLE_SCRIPT)
