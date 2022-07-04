@@ -1,4 +1,4 @@
-package com.example.cateat
+package com.example.cateat.service.indication
 
 import kotlinx.serialization.Serializable
 

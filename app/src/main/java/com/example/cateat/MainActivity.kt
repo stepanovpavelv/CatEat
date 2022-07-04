@@ -1,51 +1,35 @@
 package com.example.cateat
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.cateat.database.CatDbHelper
+import com.example.cateat.database.UserDbHelper
+import com.example.cateat.exceptions.CatException
+import com.example.cateat.service.authentication.LoginRepository
+import com.example.cateat.service.common.Result
+import com.example.cateat.service.indication.IndicationRepository
+import com.example.cateat.ui.login.LoginActivity
 import com.example.cateat.utils.CatUtils
 import kotlinx.android.synthetic.main.activity_main.*
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity() {
     /**
-     * http-клиент для взаимодействия с сервисом.
+     * Слой работы с показателями.
      */
-    private val client = HttpClient(CIO) {
-        install(HttpTimeout) {
-            requestTimeoutMillis = 10000
-        }
-        install(ContentNegotiation) {
-            json()
-        }
-    }
+    private lateinit var indicationRepository: IndicationRepository
 
     /**
-     * Слой работы с БД.
+     * Слой работы с текущим пользователем.
      */
-    private lateinit var dbConnection: CatDbHelper
+    private lateinit var loginRepository: LoginRepository
 
     /**
-     * url для создания элемента.
+     * Слой работы с локальной базой данных.
      */
-    private lateinit var createItemUrl: String
+    private lateinit var localDbConnection: UserDbHelper
 
-    @SuppressLint("SimpleDateFormat")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -53,32 +37,30 @@ class MainActivity : AppCompatActivity() {
         init()
 
         btnRefreshDateTime.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            editTextDate.setText(SimpleDateFormat(CatUtils.DATE_PATTERN).format(calendar.time))
-            editTextTime.setText(SimpleDateFormat(CatUtils.TIME_PATTERN).format(calendar.time))
+            val dateTime = CatUtils.getCurrentFormattedDateTime()
+            editTextDate.setText(dateTime.first)
+            editTextTime.setText(dateTime.second)
         }
 
         btnSave.setOnClickListener {
-            try {
-                val value = getEditValue()
-                val dateTime = getEditInstant()
+            sendData()
+        }
 
-                runBlocking {
-                    launch {
-                        transferLocalDataToServer()
-                        saveData(dateTime, value)
-                    }
-                    clearEditValues()
-                }
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-            }
+        openLoginActivityIfNeed()
+    }
+
+    private fun openLoginActivityIfNeed() {
+        val existingUser = localDbConnection.readUserInfo()
+        if (existingUser == null) {
+            val intent = Intent(this@MainActivity, LoginActivity::class.java)
+            startActivity(intent)
         }
     }
 
     private fun init() {
-        dbConnection = CatDbHelper(this)
-        createItemUrl = this.getString(R.string.cat_service_create_url)
+        indicationRepository = IndicationRepository(this)
+        loginRepository = LoginRepository()
+        localDbConnection = UserDbHelper(this)
     }
 
     private fun getEditValue() : Int {
@@ -86,12 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getEditInstant() : String {
-        return LocalDateTime.parse(
-            "${editTextDate.text.trim()} ${editTextTime.text.trim()}",
-            DateTimeFormatter.ofPattern("${CatUtils.DATE_PATTERN} ${CatUtils.TIME_PATTERN}")
-        )
-        .atZone(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ISO_INSTANT)
+        return CatUtils.getFormattedInstant(editTextDate.text.toString(), editTextTime.text.toString())
     }
 
     private fun clearEditValues() {
@@ -100,36 +77,24 @@ class MainActivity : AppCompatActivity() {
         txtNumberEatValue.setText("")
     }
 
-    private suspend fun saveData(date: String, value: Int) {
-        val dtoInfo = CatSavedInfoDto(date, value)
-
+    private fun sendData() {
         try {
-            sendSaveRequest(dtoInfo)
-        } catch (ex: Exception) {
-            dbConnection.addRecord(dtoInfo)
-        }
-    }
+            val value = getEditValue()
+            val dateTime = getEditInstant()
 
-    private suspend fun sendSaveRequest(dtoInfo: CatSavedInfoDto) {
-        val createUrl = this.getString(R.string.cat_service_create_url)
-        val response: HttpResponse = client.post(createUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(dtoInfo)
-        }
-    }
-
-    private suspend fun transferLocalDataToServer() {
-        val records = dbConnection.readRecords()
-        if (records.isEmpty()) {
-            return
-        }
-
-        try {
-            records.forEach {
-                sendSaveRequest(it)
-                dbConnection.deleteRecord(it)
+            val existingUser = localDbConnection.readUserInfo() ?: throw CatException("current user is null")
+            val url = getString(R.string.cat_service_login_url)
+            runBlocking {
+                launch {
+                    val loggedInUser = loginRepository.login(url, existingUser.login, existingUser.password)
+                    val token = if (loggedInUser is Result.Success) { loggedInUser.data.token } else ""
+                    indicationRepository.transferLocalDataToServer(token)
+                    indicationRepository.saveData(token, dateTime, value)
+                }
+                clearEditValues()
             }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
         }
-        catch (ex: Exception) { } // do nothing
     }
 }

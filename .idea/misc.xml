@@ -3,6 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Repos/CatEat/app/src/main/res/layout-w1240dp/activity_login.xml" value="0.18671875" />
+        <entry key="..\:/Repos/CatEat/app/src/main/res/layout-w936dp/activity_login.xml" value="0.16325136612021857" />
+        <entry key="..\:/Repos/CatEat/app/src/main/res/layout/activity_login.xml" value="0.2164855072463768" />
         <entry key="..\:/Repos/CatEat/app/src/main/res/layout/activity_main.xml" value="0.2164855072463768" />
       </map>
     </option>
