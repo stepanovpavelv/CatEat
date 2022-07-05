@@ -11,7 +11,7 @@ import com.example.cateat.service.authentication.model.UserLoginDto
 /**
  * Работа с локальной БД - таблица "Пользователи".
  */
-class UserDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, 2) {
+class UserDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, 3) {
 
     override fun onCreate(db: SQLiteDatabase?) {
         db?.execSQL(CREATE_TABLE_SCRIPT)
