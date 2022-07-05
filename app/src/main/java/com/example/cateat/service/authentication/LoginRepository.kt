@@ -1,7 +1,7 @@
 package com.example.cateat.service.authentication
 
-import com.example.cateat.service.common.Result
 import com.example.cateat.service.authentication.model.LoggedInUser
+import com.example.cateat.service.common.Result
 
 /**
  * Class that requests authentication and user information from the remote data source and

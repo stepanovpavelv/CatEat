@@ -11,7 +11,7 @@ import com.example.cateat.service.indication.CatSavedInfoDto
 /**
  * Работа с локальной БД - таблица "Показатели".
  */
-class CatDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, 2) {
+class CatDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, 3) {
 
     override fun onCreate(db: SQLiteDatabase?) {
         db?.execSQL(CREATE_TABLE_SCRIPT)

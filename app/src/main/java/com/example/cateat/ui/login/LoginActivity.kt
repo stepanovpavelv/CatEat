@@ -1,21 +1,20 @@
 package com.example.cateat.ui.login
 
 import android.app.Activity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
-import com.example.cateat.databinding.ActivityLoginBinding
-
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.example.cateat.R
 import com.example.cateat.database.UserDbHelper
+import com.example.cateat.databinding.ActivityLoginBinding
 import com.example.cateat.service.authentication.model.UserLoginDto
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -120,7 +119,7 @@ class LoginActivity : AppCompatActivity() {
         // TODO : initiate successful logged in experience
         Toast.makeText(
             applicationContext,
-            "$welcome $displayName",
+            "$welcome $displayName !",
             Toast.LENGTH_LONG
         ).show()
     }

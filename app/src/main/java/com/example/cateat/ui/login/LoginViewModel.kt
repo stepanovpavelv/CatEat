@@ -3,10 +3,9 @@ package com.example.cateat.ui.login
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.cateat.R
 import com.example.cateat.service.authentication.LoginRepository
 import com.example.cateat.service.common.Result
-
-import com.example.cateat.R
 
 class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
 

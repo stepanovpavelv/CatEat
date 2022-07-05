@@ -1,11 +1,11 @@
 package com.example.cateat.service.authentication
 
 import com.example.cateat.exceptions.CatException
-import com.example.cateat.service.common.Result
 import com.example.cateat.service.authentication.model.LoggedInUser
 import com.example.cateat.service.authentication.model.UserLoginDto
 import com.example.cateat.service.authentication.model.UserTokenDto
 import com.example.cateat.service.common.RestClient
+import com.example.cateat.service.common.Result
 import com.example.cateat.utils.CatUtils
 import io.ktor.client.call.*
 import io.ktor.client.request.*
