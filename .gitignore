@@ -22,9 +22,6 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-#resources
-/app/src/main/res/values/secrets.xml
-
 *.iml
 .gradle
 /local.properties
@@ -40,4 +37,3 @@ hs_err_pid*
 .externalNativeBuild
 .cxx
 local.properties
-

@@ -4,32 +4,22 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
 import androidx.core.content.contentValuesOf
 import com.example.cateat.service.indication.CatSavedInfoDto
 
 /**
  * Работа с локальной БД - таблица "Показатели".
  */
-class CatDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, 3) {
-
-    override fun onCreate(db: SQLiteDatabase?) {
-        db?.execSQL(CREATE_TABLE_SCRIPT)
-    }
-
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL(DROP_TABLE_SCRIPT)
-        onCreate(db)
-    }
+class CatDbHelper(context: Context) : CommonDbHelper(context) {
 
     fun addRecord(dto: CatSavedInfoDto) {
         val contentValues = contentValuesOf(
-            DATE_FIELD to dto.date,
-            VALUE_FIELD to dto.value
+            INDICATIONS_DATE_FIELD to dto.date,
+            INDICATIONS_VALUE_FIELD to dto.value
         )
 
         val db = this.writableDatabase
-        db.insert(TABLE_NAME,null, contentValues)
+        db.insert(INDICATIONS_TABLE,null, contentValues)
         db.close()
     }
 
@@ -38,12 +28,12 @@ class CatDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, n
         val result = mutableListOf<CatSavedInfoDto>()
 
         val database = this.readableDatabase
-        val cursor = openCursor(database, TABLE_NAME)
+        val cursor = openCursor(database, INDICATIONS_TABLE)
 
         while (cursor.moveToNext()) {
             result.add(CatSavedInfoDto(
-                date = cursor.getString(cursor.getColumnIndex(DATE_FIELD)),
-                value = cursor.getInt(cursor.getColumnIndex(VALUE_FIELD)),
+                date = cursor.getString(cursor.getColumnIndex(INDICATIONS_DATE_FIELD)),
+                value = cursor.getInt(cursor.getColumnIndex(INDICATIONS_VALUE_FIELD)),
             ))
         }
 
@@ -66,27 +56,14 @@ class CatDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, n
     }
 
     private fun openCursor(db: SQLiteDatabase, tableName: String): Cursor {
-        val fields = arrayOf(DATE_FIELD, VALUE_FIELD)
-        return db.query(tableName, fields, null, null, null, null, ID_FIELD)
+        val fields = arrayOf(INDICATIONS_DATE_FIELD, INDICATIONS_VALUE_FIELD)
+        return db.query(tableName, fields, null, null, null, null, INDICATIONS_ID_FIELD)
     }
 
     companion object {
-        private const val DATABASE_NAME: String = "CatEat"
-        private const val TABLE_NAME: String = "indications"
-        private const val ID_FIELD: String = "id"
-        private const val DATE_FIELD: String = "date"
-        private const val VALUE_FIELD: String = "value"
 
-        private const val CREATE_TABLE_SCRIPT: String = """CREATE TABLE IF NOT EXISTS $TABLE_NAME (
-                $ID_FIELD INTEGER PRIMARY KEY AUTOINCREMENT,
-                $DATE_FIELD TEXT,
-                $VALUE_FIELD INTEGER
-            );"""
+        private const val DELETE_RECORDS_SCRIPT: String = "DELETE FROM $INDICATIONS_TABLE;"
 
-        private const val DROP_TABLE_SCRIPT: String = "DROP TABLE IF EXISTS $TABLE_NAME;"
-
-        private const val DELETE_RECORDS_SCRIPT: String = "DELETE FROM $TABLE_NAME;"
-
-        private const val DELETE_ONE_RECORD_SCRIPT: String = "$DELETE_RECORDS_SCRIPT WHERE $DATE_FIELD"
+        private const val DELETE_ONE_RECORD_SCRIPT: String = "$DELETE_RECORDS_SCRIPT WHERE $INDICATIONS_DATE_FIELD"
     }
 }
