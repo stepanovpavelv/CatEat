@@ -28,7 +28,12 @@ class UserDbHelper(context: Context) : CommonDbHelper(context) {
         var dbUser: UserLoginDto? = null
 
         val database = this.readableDatabase
-        val cursor = openCursor(database, USER_TABLE)
+        val cursor = openCursor(
+            database,
+            USER_TABLE,
+            arrayOf(USERNAME_FIELD, PASSWORD_FIELD),
+            USERNAME_FIELD
+        )
 
         if (cursor.moveToNext()) {
             dbUser = UserLoginDto(
@@ -41,11 +46,6 @@ class UserDbHelper(context: Context) : CommonDbHelper(context) {
         database.close()
 
         return dbUser
-    }
-
-    private fun openCursor(db: SQLiteDatabase, tableName: String): Cursor {
-        val fields = arrayOf(USERNAME_FIELD, PASSWORD_FIELD)
-        return db.query(tableName, fields, null, null, null, null, USERNAME_FIELD)
     }
 
     companion object {

@@ -2,8 +2,6 @@ package com.example.cateat.database
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
 import androidx.core.content.contentValuesOf
 import com.example.cateat.service.indication.CatSavedInfoDto
 
@@ -28,7 +26,12 @@ class CatDbHelper(context: Context) : CommonDbHelper(context) {
         val result = mutableListOf<CatSavedInfoDto>()
 
         val database = this.readableDatabase
-        val cursor = openCursor(database, INDICATIONS_TABLE)
+
+        val cursor = openCursor(
+            database,
+            INDICATIONS_TABLE,
+            arrayOf(INDICATIONS_DATE_FIELD, INDICATIONS_VALUE_FIELD),
+            INDICATIONS_ID_FIELD)
 
         while (cursor.moveToNext()) {
             result.add(CatSavedInfoDto(
@@ -53,11 +56,6 @@ class CatDbHelper(context: Context) : CommonDbHelper(context) {
         val db = this.writableDatabase
         db.execSQL(DELETE_RECORDS_SCRIPT)
         db.close()
-    }
-
-    private fun openCursor(db: SQLiteDatabase, tableName: String): Cursor {
-        val fields = arrayOf(INDICATIONS_DATE_FIELD, INDICATIONS_VALUE_FIELD)
-        return db.query(tableName, fields, null, null, null, null, INDICATIONS_ID_FIELD)
     }
 
     companion object {

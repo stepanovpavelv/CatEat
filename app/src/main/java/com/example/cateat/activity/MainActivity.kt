@@ -1,8 +1,9 @@
-package com.example.cateat
+package com.example.cateat.activity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.example.cateat.R
 import com.example.cateat.database.UserDbHelper
 import com.example.cateat.databinding.ActivityMainBinding
 import com.example.cateat.exceptions.CatException
@@ -34,6 +35,20 @@ class MainActivity : AppCompatActivity() {
         openLoginActivityIfNeed()
     }
 
+    fun transferLocalDataToServer() {
+        try {
+            val existingUser = localDbConnection.readUserInfo() ?: throw CatException("current user is null")
+            val url = getString(R.string.cat_service_login_url)
+            GlobalScope.launch {
+                val loggedInUser = loginRepository.login(url, existingUser.login, existingUser.password)
+                val token = if (loggedInUser is Result.Success) { loggedInUser.data.token } else ""
+                indicationRepository.transferLocalDataToServer(token)
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+    }
+
     private fun openLoginActivityIfNeed() {
         val existingUser = localDbConnection.readUserInfo()
         if (existingUser == null) {
@@ -55,6 +70,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnSave.setOnClickListener {
             sendData()
+        }
+
+        binding.btnRegistry.setOnClickListener {
+            val intent = Intent(this@MainActivity, RegistryActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -82,7 +102,6 @@ class MainActivity : AppCompatActivity() {
             GlobalScope.launch {
                 val loggedInUser = loginRepository.login(url, existingUser.login, existingUser.password)
                 val token = if (loggedInUser is Result.Success) { loggedInUser.data.token } else ""
-                indicationRepository.transferLocalDataToServer(token)
                 indicationRepository.saveData(token, dateTime, value)
             }
             clearEditValues()
